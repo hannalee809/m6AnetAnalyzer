@@ -107,14 +107,8 @@ head(example_m6A_naive_gli36_cells)
 # Root output directory
 output_dir <- "vignette_outputs"
 
-# Define subdirectories
-dir_descriptive <- file.path(output_dir, "descriptive_statistics")
-dir_annotations <- file.path(output_dir, "external_annotations")
-dir_comparisons <- file.path(output_dir, "comparative_analysis")
-
-# Create directories if they don't exist
-dirs <- c(output_dir, dir_descriptive, dir_annotations, dir_comparisons)
-lapply(dirs, dir.create, recursive = TRUE, showWarnings = FALSE)
+# Create directory
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 ```
 
 # Descriptive Statistics
@@ -130,12 +124,12 @@ After importing the `data.site_proba.csv` file in the required format, you can g
 5. **Modified k-mer distribution:** Table and bar graph showing counts and frequencies of modified k-mers.
 6. **Transcript length distribution:** Table and density graph showing the lengths of modified transcripts, grouped into bins: 101–500 bp, 501–1000 bp, 1001–5000 bp, 5001–10000 bp, and >10000 bp.
 
-```{r summarize-m6anet-output, message=FALSE, warning = FALSE}
+```{r summarize-m6anet-output, eval=FALSE}
 # Generate the summary HTML report
 summarize_m6anet_output(
   example_m6A_naive_gli36_cells, 
   output_file = "naive_summary_report.html",
-  output_dir = dir_descriptive)
+  output_dir = output_dir)
 ```
 
 ```{r summary-plot, echo=FALSE, out.width="100%", out.height="500px"}
@@ -153,7 +147,7 @@ filtered_m6A_naive_gli36_cells <- filter_m6a_sites(example_m6A_naive_gli36_cells
                                        prob_modified =0.9)
 
 # save output
-write.csv(filtered_m6A_naive_gli36_cells, file.path(dir_descriptive, "naive_filtered_m6A_sites.csv"))
+write.csv(filtered_m6A_naive_gli36_cells, file.path(output_dir, "naive_filtered_m6A_sites.csv"))
 ```
 
 ## Transcript Region Analysis
@@ -198,8 +192,8 @@ p <- plot_relative_positions(naive_m6A_with_tx_annotations, label = "naive") # a
 p
 
 # Save output
-write.csv(naive_m6A_with_tx_annotations, file.path(dir_descriptive,"naive_m6A_with_tx_annotations.csv"))
-ggsave("naive_tx_density.pdf", p)
+write.csv(naive_m6A_with_tx_annotations, file.path(output_dir,"naive_m6A_with_tx_annotations.csv"))
+ggsave(file.path(output_dir,"naive_tx_density.pdf"), p)
 ```
 
 The output includes the original m6A site information along with transcript-region annotations (5′UTR, CDS, 3′UTR). For each region, the table reports its length, start and end positions, the region in which the site falls, and the site’s relative position within that region. Some sites may not map to any transcript region (i.e., sites on non-coding transcripts with no annotated UTR/CDS structures). These sites are retained in the output, with `NA` values for the transcript-region fields.
@@ -209,8 +203,8 @@ This function assigns each m6A site to its chromosome using human gene annotatio
 
 ```{r chr-dist, message = FALSE, warning = FALSE}
 chr <- calculate_chromosome_location(filtered_m6A_naive_gli36_cells,
-                              output_csv=file.path(dir_descriptive,"chromosomal_distribution.csv"), 
-                              output_plot=file.path(dir_descriptive,"naive_chr_distribution.png"))
+                              output_csv=file.path(output_dir,"chromosomal_distribution.csv"), 
+                              output_plot=file.path(output_dir,"naive_chr_distribution.png"))
 
 # Show chromosome annotation
 head(chr)
@@ -355,7 +349,8 @@ feature_col = "RBP_name"
 head(annotated_example_naive_with_rbp$overlap_df)
 
 # Show output #2: m6A dataframe with the summarized overlapping features
-head(annotated_example_naive_with_rbp$annotated_m6A_df)
+annotated_m6A_df <- annotated_example_naive_with_rbp$annotated_m6A_df
+head(annotated_m6A_df[!is.na(annotated_m6A_df$Overlapping_Features), ])
 ```
 
 Both output dataframes include a reference to the original m6A sites. In `overlap_df`, the first column `m6a_index` directly corresponds to the m6A site identifier from the input BED file, providing a one-to-one mapping for each overlap with RBPs. In `annotated_m6A_df`, the first column is a `row_id` that references the row of the original m6A dataframe. This allows users to easily merge the summarized annotation back with their original m6A dataset for downstream analyses. Essentially, `overlap_df` gives a detailed, long-format view of individual overlaps, while `annotated_m6A_df` provides a compact summary with a direct link to the original m6A sites.
@@ -642,17 +637,17 @@ If your study includes replicates, use the output from run_wmr_differential_test
 
 Inputs:
 
-- wmr_df: output from run_wmr_differential_test()
-- deseq: DESeq2 results with gene IDs, log2 fold changes, and adjusted p-values
-- Optional WMR significance thresholds (wmr_sig), including:
+- `wmr_df`: output from run_wmr_differential_test()
+- `deseq`: DESeq2 results with gene IDs, log2 fold changes, and adjusted p-values
+- Optional WMR significance thresholds (`wmr_sig`), including:
 
-    - p_val: p-value cutoff for WMR significance
-    - diff: minimum median difference threshold
+    - `p_val`: p-value cutoff for WMR significance
+    - `diff`: minimum median difference threshold
 
 Outputs:
 
-- data: merged data frame with median WMR differences and DGE statistics
-- plot: scatter plot with:
+- `data`: merged data frame with median WMR differences and DGE statistics
+- `plot`: scatter plot with:
 
     - X-axis: median difference in weighted modification ratio
     - Y-axis: gene log2 fold change

@@ -539,7 +539,7 @@ simulate_wmr_replicate <- function(
     dplyr::mutate(
       sum_mod = pmax(
         0,
-        sum_mod + rnorm(n(), mean = 0, sd = noise_sd)
+        sum_mod + rnorm(dplyr::n(), mean = 0, sd = noise_sd)
       ),
       weighted_mod_ratio = sum_mod / transcript_length
     )

@@ -51,7 +51,7 @@ run_wmr_differential_test <- function(condition1_list,
   filtered <- all_wmr %>%
     group_by(ensembl_transcript_id) %>%
     filter(any(weighted_mod_ratio > 0)) %>%
-    ungroup()
+    dplyr::ungroup()
 
   # Run Wilcoxon per transcript and summarize
   results <- filtered %>%
@@ -92,7 +92,7 @@ run_wmr_differential_test <- function(condition1_list,
         p_value = wt$p.value
       )
     }) %>%
-    ungroup()
+    dplyr::ungroup()
 
   return(results)
 }
